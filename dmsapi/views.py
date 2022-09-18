@@ -82,12 +82,24 @@ class FolderView(APIView):
     serializer_class = FolderSerializer
 
     def post(self, request):
+        """
+        {
+            "name": <required>
+            "parent": <optional> <add this for folder nesting>
+            "has_children" <optional> <this will get updated automatically if a child is added to the folder>
+        }
+        """
         return create(request.data, Folder, self.serializer_class, check_parent=True)
 
     def get(self, request):
         return get_all(Folder)
 
     def delete(self, request, format=None):
+        """
+        {
+            "id": <required> <id of folder to be deleted>
+        }
+        """
         return delete_one(request.data, Folder, has_parent=True)
 
 
@@ -98,6 +110,14 @@ class FolderDetailsView(APIView):
         return get_one(id, Folder, self.serializer_class)
 
     def patch(self, request, id):
+        """
+        Data to be edited for folder corresponding to "id"
+        {
+            "name": <optional>
+            "parent": <optional>
+            "has_children" <optional>
+        }
+        """
         return patch_record(request.data, id, Folder, self.serializer_class)
 
 
@@ -105,12 +125,24 @@ class DocumentView(APIView):
     serializer_class = DocumentSerializer
 
     def post(self, request):
+        """
+        {
+            "name": <required>
+            "parent": <optional> <add this for folder nesting>
+            "content" <optional> <if not added, defaults to an empty string>
+        }
+        """
         return create(request.data, Document, self.serializer_class, check_parent=True)
 
     def get(self, request):
         return get_all(Document)
 
     def delete(self, request, format=None):
+        """
+        {
+            "id": <required> <id of document to be deleted>
+        }
+        """
         return delete_one(request.data, Document, has_parent=True)
 
 
@@ -121,6 +153,14 @@ class DocumentDetailsView(APIView):
         return get_one(id, Document, self.serializer_class)
 
     def patch(self, request, id):
+        """
+        Data to be edited for document corresponding to "id"
+        {
+            "name": <optional>
+            "parent": <optional>
+            "content" <optional>
+        }
+        """
         return patch_record(request.data, id, Document, self.serializer_class)
 
 
@@ -128,12 +168,24 @@ class TopicView(APIView):
     serializer_class = TopicSerializer
 
     def post(self, request):
+        """
+        {
+            "name": <required>
+            "short_desc": <required>
+            "long_desc" <optional> <if not added, defaults to an empty string>
+        }
+        """
         return create(request.data, Topic, self.serializer_class)
 
     def get(self, request):
         return get_all(Topic)
 
     def delete(self, request, format=None):
+        """
+        {
+            "id": <required> <id of topic to be deleted>
+        }
+        """
         return delete_one(request.data, Folder)
 
 
@@ -144,6 +196,14 @@ class TopicDetailsView(APIView):
         return get_one(id, Topic, self.serializer_class)
 
     def patch(self, request, id):
+        """
+        Data to be edited for topic corresponding to "id"
+        {
+            "name": <optional>
+            "short_desc": <optional>
+            "long_desc" <optional>
+        }
+        """
         return patch_record(request.data, id, Topic, self.serializer_class)
 
 
@@ -151,9 +211,22 @@ class FolderTopicView(APIView):
     serializer_class = FolderTopicSerializer
 
     def post(self, request):
+        """
+        {
+            "folder": <required> <id of folder>
+            "topic": <required> <id of topic>
+        }
+        """
         return create(request.data, FolderTopic, self.serializer_class)
 
     def get(self, request):
+        """
+        Returns folders against a topic name
+
+        {
+            "name": <required>
+        }
+        """
         try:
             obj = Topic.objects.get(name=request.data["name"])
         except Topic.DoesNotExist:
@@ -172,9 +245,23 @@ class DocumentTopicView(APIView):
     serializer_class = DocumentSerializer
 
     def post(self, request):
+        """
+        {
+            "document": <required> <id of document>
+            "topic": <required> <id of topic>
+        }
+        """
         return create(request.data, DocumentTopic, self.serializer_class)
 
     def get(self, request):
+        """
+        Returns documents against a topic name. Can also return the documents inside a folder against a topic name
+
+        {
+            "topic_name": <required>
+            "folder_name" <optional>
+        }
+        """
         try:
             topic_obj = Topic.objects.get(name=request.data["topic_name"])
             folder_obj = None
