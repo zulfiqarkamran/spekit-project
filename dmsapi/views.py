@@ -3,6 +3,9 @@ from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from .serializers import FolderSerializer, DocumentSerializer, TopicSerializer, FolderTopicSerializer, DocumentTopicSerializer
 from .models import Folder, Document, Topic, FolderTopic, DocumentTopic
@@ -81,154 +84,453 @@ def patch_record(data, id, model, serializer_class):
 class FolderView(APIView):
     serializer_class = FolderSerializer
 
-    def post(self, request):
-        """
-        {
-            "name": <required>
-            "parent": <optional> <add this for folder nesting>
-            "has_children" <optional> <this will get updated automatically if a child is added to the folder>
+    @method_decorator(name='post', decorator=swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['name'],
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING),
+                'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'has_children': openapi.Schema(type=openapi.TYPE_BOOLEAN)
+            }
+        ),
+        responses={
+            201: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'has_children': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
         }
-        """
+    ))
+    def post(self, request):
         return create(request.data, Folder, self.serializer_class, check_parent=True)
 
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    }
+                )
+            )
+        }
+    ))
     def get(self, request):
         return get_all(Folder)
 
-    def delete(self, request, format=None):
-        """
-        {
-            "id": <required> <id of folder to be deleted>
+    @method_decorator(name='delete', decorator=swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['id'],
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER)
+            }
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={}
+            )
         }
-        """
+    ))
+    def delete(self, request, format=None):
         return delete_one(request.data, Folder, has_parent=True)
 
 
 class FolderDetailsView(APIView):
     serializer_class = FolderSerializer
 
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'id', openapi.IN_QUERY,
+                description=("Folder id whose details are required as output"),
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'has_children': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        }
+    ))
     def get(self, request, id):
         return get_one(id, Folder, self.serializer_class)
 
-    def patch(self, request, id):
-        """
-        Data to be edited for folder corresponding to "id"
-        {
-            "name": <optional>
-            "parent": <optional>
-            "has_children" <optional>
+    @method_decorator(name='patch', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'id', openapi.IN_QUERY,
+                description=("Folder id whose details are to be modified"),
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=[],
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING),
+                'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'has_children': openapi.Schema(type=openapi.TYPE_BOOLEAN)
+            }
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'has_children': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
         }
-        """
+    ))
+    def patch(self, request, id):
         return patch_record(request.data, id, Folder, self.serializer_class)
 
 
 class DocumentView(APIView):
     serializer_class = DocumentSerializer
 
-    def post(self, request):
-        """
-        {
-            "name": <required>
-            "parent": <optional> <add this for folder nesting>
-            "content" <optional> <if not added, defaults to an empty string>
+    @method_decorator(name='post', decorator=swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['name'],
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING),
+                'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'content': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        responses={
+            201: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'content': openapi.Schema(type=openapi.TYPE_STRING),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
         }
-        """
+    ))
+    def post(self, request):
         return create(request.data, Document, self.serializer_class, check_parent=True)
 
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    }
+                )
+            )
+        }
+    ))
     def get(self, request):
         return get_all(Document)
 
-    def delete(self, request, format=None):
-        """
-        {
-            "id": <required> <id of document to be deleted>
+    @method_decorator(name='delete', decorator=swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['id'],
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER)
+            }
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={}
+            )
         }
-        """
+    ))
+    def delete(self, request, format=None):
         return delete_one(request.data, Document, has_parent=True)
 
 
 class DocumentDetailsView(APIView):
     serializer_class = DocumentSerializer
 
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'id', openapi.IN_QUERY,
+                description=("Document id whose details are required as output"),
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'content': openapi.Schema(type=openapi.TYPE_STRING),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        }
+    ))
     def get(self, request, id):
         return get_one(id, Document, self.serializer_class)
 
-    def patch(self, request, id):
-        """
-        Data to be edited for document corresponding to "id"
-        {
-            "name": <optional>
-            "parent": <optional>
-            "content" <optional>
+    @method_decorator(name='patch', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'id', openapi.IN_QUERY,
+                description=("Document id whose details are to be modified"),
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=[],
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING),
+                'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'content': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'parent': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'content': openapi.Schema(type=openapi.TYPE_STRING),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
         }
-        """
+    ))
+    def patch(self, request, id):
         return patch_record(request.data, id, Document, self.serializer_class)
 
 
 class TopicView(APIView):
     serializer_class = TopicSerializer
 
-    def post(self, request):
-        """
-        {
-            "name": <required>
-            "short_desc": <required>
-            "long_desc" <optional> <if not added, defaults to an empty string>
+    @method_decorator(name='post', decorator=swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['name', 'short_desc'],
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING),
+                'short_desc': openapi.Schema(type=openapi.TYPE_STRING),
+                'long_desc': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        responses={
+            201: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'short_desc': openapi.Schema(type=openapi.TYPE_STRING),
+                    'long_desc': openapi.Schema(type=openapi.TYPE_STRING),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
         }
-        """
+    ))
+    def post(self, request):
         return create(request.data, Topic, self.serializer_class)
 
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    }
+                )
+            )
+        }
+    ))
     def get(self, request):
         return get_all(Topic)
 
-    def delete(self, request, format=None):
-        """
-        {
-            "id": <required> <id of topic to be deleted>
+    @method_decorator(name='delete', decorator=swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['id'],
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER)
+            }
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={}
+            )
         }
-        """
+    ))
+    def delete(self, request, format=None):
         return delete_one(request.data, Folder)
 
 
 class TopicDetailsView(APIView):
     serializer_class = TopicSerializer
 
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'id', openapi.IN_QUERY,
+                description=("Topic id whose details are required as output"),
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'short_desc': openapi.Schema(type=openapi.TYPE_STRING),
+                    'long_desc': openapi.Schema(type=openapi.TYPE_STRING),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        }
+    ))
     def get(self, request, id):
         return get_one(id, Topic, self.serializer_class)
 
-    def patch(self, request, id):
-        """
-        Data to be edited for topic corresponding to "id"
-        {
-            "name": <optional>
-            "short_desc": <optional>
-            "long_desc" <optional>
+    @method_decorator(name='patch', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'id', openapi.IN_QUERY,
+                description=("Topic id whose details are to be modified"),
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=[],
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING),
+                'short_desc': openapi.Schema(type=openapi.TYPE_STRING),
+                'long_desc': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    'short_desc': openapi.Schema(type=openapi.TYPE_STRING),
+                    'long_desc': openapi.Schema(type=openapi.TYPE_STRING),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
         }
-        """
+    ))
+    def patch(self, request, id):
         return patch_record(request.data, id, Topic, self.serializer_class)
 
 
 class FolderTopicView(APIView):
     serializer_class = FolderTopicSerializer
 
-    def post(self, request):
-        """
-        {
-            "folder": <required> <id of folder>
-            "topic": <required> <id of topic>
+    @method_decorator(name='post', decorator=swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['folder', 'topic'],
+            properties={
+                'folder': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'topic': openapi.Schema(type=openapi.TYPE_INTEGER)
+            }
+        ),
+        responses={
+            201: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'folder': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'topic': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
         }
-        """
+    ))
+    def post(self, request):
         return create(request.data, FolderTopic, self.serializer_class)
 
-    def get(self, request):
-        """
-        Returns folders against a topic name
-
-        {
-            "name": <required>
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'topic_name', openapi.IN_QUERY,
+                description=("Topic name whose associated folders are required in the output"),
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    }
+                )
+            )
         }
-        """
+    ))
+    def get(self, request):
+        topic_name = request.GET.get("topic_name", None)
+        if topic_name is None:
+            return Response([{"message": "Parameter 'topic_name' is required"}], status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            obj = Topic.objects.get(name=request.data["name"])
+            obj = Topic.objects.get(name=topic_name)
         except Topic.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -242,31 +544,71 @@ class FolderTopicView(APIView):
 
 
 class DocumentTopicView(APIView):
-    serializer_class = DocumentSerializer
+    serializer_class = DocumentTopicSerializer
 
-    def post(self, request):
-        """
-        {
-            "document": <required> <id of document>
-            "topic": <required> <id of topic>
+    @method_decorator(name='post', decorator=swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['document', 'topic'],
+            properties={
+                'document': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'topic': openapi.Schema(type=openapi.TYPE_INTEGER)
+            }
+        ),
+        responses={
+            201: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'document': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'topic': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'created_at': openapi.Schema(type=openapi.TYPE_STRING),
+                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
         }
-        """
+    ))
+    def post(self, request):
         return create(request.data, DocumentTopic, self.serializer_class)
 
-    def get(self, request):
-        """
-        Returns documents against a topic name. Can also return the documents inside a folder against a topic name
-
-        {
-            "topic_name": <required>
-            "folder_name" <optional>
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'topic_name', openapi.IN_QUERY,
+                description=("Topic name whose associated documents are required in the output"),
+                type=openapi.TYPE_STRING,
+                required=True
+            ),
+            openapi.Parameter(
+                'folder_name', openapi.IN_QUERY,
+                description=("Folder name whose documents are required in the output"),
+                type=openapi.TYPE_STRING,
+                required=False
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'name': openapi.Schema(type=openapi.TYPE_STRING),
+                    }
+                )
+            )
         }
-        """
+    ))
+    def get(self, request):
+        topic_name = request.GET.get("topic_name", None)
+        if topic_name is None:
+            return Response([{"message": "Parameter 'topic_name' is required"}], status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            topic_obj = Topic.objects.get(name=request.data["topic_name"])
+            topic_obj = Topic.objects.get(name=topic_name)
             folder_obj = None
-            if request.data.get("folder_name", None) is not None:
-                folder_obj = Folder.objects.get(name=request.data["folder_name"])
+            if request.GET.get("folder_name", None) is not None:
+                folder_obj = Folder.objects.get(name=request.GET.get("folder_name"))
         except (Topic.DoesNotExist, Folder.DoesNotExist) as e:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

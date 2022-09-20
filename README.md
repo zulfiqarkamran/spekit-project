@@ -1,8 +1,14 @@
 # spekit-project
 
-admin url: https://spekit-project.herokuapp.com/admin
-admin user: u15371
-admin password: 123
+Documentation
+=============
+	url: https://spekit-project.herokuapp.com
+
+Admin Credentials
+=================
+	admin url: https://spekit-project.herokuapp.com/admin
+	admin user: u15371
+	admin password: 123
 
 
 Setup Virtual Environment To Run Tests

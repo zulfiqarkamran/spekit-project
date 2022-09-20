@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-%3vum_fm25n*c%qotj*l+^9$)+5bc5wwz_r1q*dj((iyt+h_&j'
+SECRET_KEY = 'django-insecure-%3vum_fm25n*c%qotj*l+^9$)+5bc5wwz_r1q*dj((iyt+h_&j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_swagger',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -58,7 +58,6 @@ CSRF_TRUSTED_ORIGINS = ["https://spekit-project.herokuapp.com"]
 
 REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
 }
 
 ROOT_URLCONF = 'dms.urls'
@@ -75,9 +74,6 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
-            'libraries' : {
-                'staticfiles': 'django.templatetags.static',
-            }
         },
     },
 ]
